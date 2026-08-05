@@ -30,6 +30,24 @@ Orden de columnas:
 7. createdAtIso
 8. sourceResponseId
 
+## Hoja Config
+
+Orden de columnas:
+
+1. type
+2. code
+3. isActive
+4. description
+
+Reglas:
+
+1. `type` acepta `PACKAGE`, `EVENT` o `ALERT_EMAIL`.
+2. `code` se evalua en mayusculas para matching.
+3. `isActive` controla si la entrada participa en validacion.
+4. Los paquetes activos controlan valores permitidos en `packageCode`.
+5. Los eventos activos, si existen, controlan valores permitidos en `eventCode`.
+6. Los registros `ALERT_EMAIL` activos se usan para notificaciones de errores criticos.
+
 ## Reglas de integridad (MVP)
 
 1. `orderId` debe ser unico.

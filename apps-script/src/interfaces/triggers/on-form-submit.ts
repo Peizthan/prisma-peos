@@ -1,6 +1,8 @@
 import { RegisterOrderUseCase } from '../../application/use-cases/register-order';
 import { toPeosError } from '../../application/errors/peos-error';
+import { CriticalErrorEmailAlert } from '../../infrastructure/google/critical-error-email-alert';
 import { DocumentLockRunner } from '../../infrastructure/google/document-lock-runner';
+import { SheetsOrderCatalogRepository } from '../../infrastructure/google/sheets-order-catalog-repository';
 import { SheetsOrderRepository } from '../../infrastructure/google/sheets-order-repository';
 import { SheetsSystemLogger } from '../../infrastructure/google/sheets-system-logger';
 import { mapFormSubmissionToRegisterOrderInput } from './form-mapping';
@@ -8,6 +10,7 @@ import { mapFormSubmissionToRegisterOrderInput } from './form-mapping';
 export function onFormSubmitHandler(e: GoogleAppsScript.Events.SheetsOnFormSubmit): void {
   const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   const logger = new SheetsSystemLogger(spreadsheet);
+  const alertService = new CriticalErrorEmailAlert(spreadsheet);
   const lockRunner = new DocumentLockRunner();
   const correlationId = buildCorrelationId(e);
 
@@ -15,7 +18,8 @@ export function onFormSubmitHandler(e: GoogleAppsScript.Events.SheetsOnFormSubmi
     lockRunner.runWithLock('onFormSubmitHandler', () => {
       const input = mapFormSubmissionToRegisterOrderInput(e);
       const repository = new SheetsOrderRepository(spreadsheet);
-      const useCase = new RegisterOrderUseCase(repository);
+      const catalogRepository = new SheetsOrderCatalogRepository(spreadsheet);
+      const useCase = new RegisterOrderUseCase(repository, catalogRepository);
 
       const order = useCase.execute(input);
       writeOrderIdOnResponseSheet(e.range.getSheet(), e.range.getRow(), order.orderId);
@@ -45,6 +49,34 @@ export function onFormSubmitHandler(e: GoogleAppsScript.Events.SheetsOnFormSubmi
     });
 
     logger.error(peosError, correlationId);
+
+    try {
+      const wasNotified = alertService.notifyIfCritical(peosError, correlationId);
+      if (wasNotified) {
+        logger.info({
+          code: 'CRITICAL_ALERT_SENT',
+          operation: 'onFormSubmitHandler',
+          message: 'Critical error alert email sent',
+          correlationId,
+          context: {
+            errorCode: peosError.code
+          }
+        });
+      }
+    } catch (alertError) {
+      const alertFailure = toPeosError(alertError, {
+        code: 'ALERT_FAILURE',
+        operation: 'onFormSubmitHandler',
+        retryable: false,
+        context: {
+          correlationId,
+          originalErrorCode: peosError.code
+        }
+      });
+
+      logger.error(alertFailure, correlationId);
+    }
+
     throw peosError;
   }
 }

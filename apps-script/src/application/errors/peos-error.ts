@@ -2,6 +2,7 @@ export type PeosErrorCode =
   | 'VALIDATION_ERROR'
   | 'SHEET_SCHEMA_INVALID'
   | 'LOCK_TIMEOUT'
+  | 'ALERT_FAILURE'
   | 'UNEXPECTED_ERROR';
 
 export interface PeosErrorOptions {
