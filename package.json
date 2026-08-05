@@ -1,0 +1,31 @@
+{
+  "name": "prisma-event-order-system",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PEOS MVP with Clean Architecture over Google Workspace",
+  "scripts": {
+    "clean": "rimraf apps-script/dist",
+    "build:apps-script": "npm run clean && esbuild apps-script/src/main.ts --bundle --platform=browser --format=iife --target=es2019 --outfile=apps-script/dist/code.js && shx cp apps-script/appsscript.json apps-script/dist/appsscript.json",
+    "lint": "eslint \"apps-script/src/**/*.ts\"",
+    "typecheck": "tsc -p apps-script/tsconfig.json --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "clasp:login": "clasp login",
+    "clasp:push": "clasp push",
+    "clasp:pull": "clasp pull"
+  },
+  "devDependencies": {
+    "@types/google-apps-script": "^1.0.99",
+    "@typescript-eslint/eslint-plugin": "^8.44.0",
+    "@typescript-eslint/parser": "^8.44.0",
+    "typescript-eslint": "^8.44.0",
+    "@google/clasp": "^3.0.0",
+    "esbuild": "^0.25.9",
+    "eslint": "^9.34.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.6.2",
+    "rimraf": "^6.0.1",
+    "shx": "^0.4.0",
+    "typescript": "^5.9.2"
+  }
+}
