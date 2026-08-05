@@ -1,5 +1,6 @@
 import type { Order } from '../../domain/entities/order';
 import type { OrderRepository } from '../../application/ports/order-repository';
+import { PeosError } from '../../application/errors/peos-error';
 
 const ORDER_HEADERS = [
   'orderId',
@@ -74,10 +75,34 @@ export class SheetsOrderRepository implements OrderRepository {
 
   private ensureHeaders(sheet: GoogleAppsScript.Spreadsheet.Sheet): void {
     if (sheet.getLastRow() !== 0) {
+      this.validateExistingHeaders(sheet);
       return;
     }
 
     sheet.getRange(1, 1, 1, ORDER_HEADERS.length).setValues([Array.from(ORDER_HEADERS)]);
+  }
+
+  private validateExistingHeaders(sheet: GoogleAppsScript.Spreadsheet.Sheet): void {
+    const currentHeaders = sheet.getRange(1, 1, 1, ORDER_HEADERS.length).getValues()[0] ?? [];
+
+    ORDER_HEADERS.forEach((expectedHeader, index) => {
+      const currentValue = currentHeaders[index];
+      const actualHeader = typeof currentValue === 'string' ? currentValue.trim() : '';
+
+      if (actualHeader !== expectedHeader) {
+        throw new PeosError('Orders sheet header schema mismatch', {
+          code: 'SHEET_SCHEMA_INVALID',
+          operation: 'SheetsOrderRepository.validateExistingHeaders',
+          retryable: false,
+          context: {
+            sheetName: this.sheetName,
+            columnNumber: index + 1,
+            expectedHeader,
+            actualHeader
+          }
+        });
+      }
+    });
   }
 
   private toDatePart(date: Date): string {

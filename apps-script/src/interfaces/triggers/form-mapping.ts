@@ -1,4 +1,5 @@
 import type { RegisterOrderInput } from '../../application/use-cases/register-order';
+import { PeosError } from '../../application/errors/peos-error';
 import type { OrderPackage } from '../../domain/entities/order';
 
 const FORM_FIELDS = {
@@ -35,7 +36,12 @@ function requiredField(namedValues: GoogleAppsScript.Events.SheetsOnFormSubmit['
   const firstValue = values?.[0];
 
   if (!firstValue || firstValue.trim().length === 0) {
-    throw new Error(`Missing required form field: ${key}`);
+    throw new PeosError(`Missing required form field: ${key}`, {
+      code: 'VALIDATION_ERROR',
+      operation: 'mapFormSubmissionToRegisterOrderInput',
+      retryable: false,
+      context: { field: key }
+    });
   }
 
   return firstValue;
@@ -51,6 +57,10 @@ function optionalField(
 function parsePackage(label: string): OrderPackage {
   const normalized = label.trim().toUpperCase();
 
+  if (normalized.includes('BASIC')) {
+    return 'BASIC';
+  }
+
   if (normalized.includes('PREMIUM')) {
     return 'PREMIUM';
   }
@@ -59,7 +69,12 @@ function parsePackage(label: string): OrderPackage {
     return 'PLUS';
   }
 
-  return 'BASIC';
+  throw new PeosError(`Unknown package label: ${label}`, {
+    code: 'VALIDATION_ERROR',
+    operation: 'mapFormSubmissionToRegisterOrderInput',
+    retryable: false,
+    context: { packageLabel: label }
+  });
 }
 
 function buildResponseId(e: GoogleAppsScript.Events.SheetsOnFormSubmit): string {

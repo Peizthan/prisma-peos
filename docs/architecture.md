@@ -58,6 +58,18 @@ flowchart LR
 - Justificacion: Apps Script no ejecuta modulos TypeScript directamente.
 - Beneficio: conservamos modularidad en desarrollo y entregamos artefacto compatible.
 
+5. Seccion critica protegida con LockService
+- Justificacion: el flujo de alta de pedidos tiene un contador secuencial por dia y evento.
+- Beneficio: evita colisiones de IDs en ejecuciones concurrentes del trigger.
+
+6. Errores operativos estructurados
+- Justificacion: errores genericos dificultan observabilidad y soporte.
+- Beneficio: cada error incluye `code`, `operation`, `retryable` y `context`.
+
+7. Validacion estricta de esquema de `Orders`
+- Justificacion: cambios manuales en cabeceras pueden corromper datos sin ser detectados.
+- Beneficio: falla temprano con error tipado cuando hay desalineacion de columnas.
+
 ## Riesgos de escalabilidad detectados
 
 1. Secuencia calculada por lectura de hoja completa.
@@ -65,9 +77,11 @@ flowchart LR
 - Plan: indice auxiliar por evento-fecha o contador persistente.
 
 2. Trigger sin cola ni reintentos robustos.
-- Impacto: eventos concurrentes podrian generar conflictos.
-- Plan: agregar lock transaccional y politica de reintento.
+- Estado: lock de concurrencia implementado para seccion critica.
+- Riesgo residual: no existe cola durable ni retry policy con backoff.
+- Plan: agregar estrategia de reintentos y mecanismo de cola al migrar a backend.
 
 3. Dependencia de estructura de columnas.
-- Impacto: cambios manuales en Sheets pueden romper integridad.
-- Plan: validacion de esquema al inicio y migraciones controladas.
+- Estado: validacion de esquema implementada en inicializacion del repositorio.
+- Riesgo residual: no existe versionado automatizado de migraciones de hoja.
+- Plan: introducir version de esquema y scripts de migracion controlada.

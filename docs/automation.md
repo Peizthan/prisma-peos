@@ -5,21 +5,21 @@
 - Trigger `onFormSubmit` procesa cada respuesta.
 - Se genera pedido y se guarda en `Orders`.
 - Se escribe `Order ID` en hoja de respuestas.
+- Se usa `LockService` para proteger la seccion critica de registro.
+- Se valida el esquema de cabeceras de `Orders` antes de persistir.
+- Se registran eventos tecnicos en `SystemLogs` con formato estructurado.
 
 ## Automatizaciones siguientes recomendadas
 
-1. Bloqueo de concurrencia
-- Usar `LockService` para evitar colisiones en secuencias.
-
-2. Registro tecnico de errores
-- Hoja `SystemLogs` para auditoria minima.
-- Nivel de severidad y contexto de evento.
-
-3. Alertas operativas
+1. Alertas operativas
 - Enviar correo al equipo cuando falle el trigger.
 
-4. Normalizacion de catalogos
+2. Normalizacion de catalogos
 - Hoja `Config` para paquetes y eventos validos.
+
+3. Reintentos controlados
+- Definir politica de retry para errores `retryable`.
+- Limitar maximo de intentos para evitar duplicidad de efectos.
 
 ## Principio de diseno
 
