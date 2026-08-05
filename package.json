@@ -9,6 +9,8 @@
     "dev:apps-script": "npm run clean && shx mkdir -p apps-script/dist && shx cp apps-script/appsscript.json apps-script/dist/appsscript.json && esbuild apps-script/src/main.ts --bundle --platform=browser --format=iife --target=es2019 --outfile=apps-script/dist/code.js --watch",
     "dev:web": "npm --prefix web run dev",
     "build:web": "npm --prefix web run build",
+    "typecheck:web": "npm --prefix web run typecheck",
+    "check": "npm run typecheck && npm run lint && npm run typecheck:web",
     "lint": "eslint \"apps-script/src/**/*.ts\"",
     "typecheck": "tsc -p apps-script/tsconfig.json --noEmit",
     "format": "prettier --write .",

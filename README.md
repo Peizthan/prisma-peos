@@ -43,7 +43,39 @@ Ver documentacion en `docs/` para especificacion, arquitectura, modelo de datos 
 npm install
 npm run lint
 npm run typecheck
+npm run check
 npm run build:apps-script
+```
+
+## Frontend Local (localhost)
+
+El frontend vive en la carpeta `web/` y corre con Vite para revisar producto en local.
+
+```bash
+# instalar dependencias del frontend
+cd web
+npm install
+
+# correr frontend en localhost
+npm run dev
+```
+
+URL local esperada:
+
+- `http://localhost:5173/`
+
+Desde la raiz del repo tambien puedes iniciar frontend con:
+
+```bash
+npm run dev:web
+```
+
+## Validacion integral de calidad
+
+Para validar Apps Script y frontend en una sola corrida:
+
+```bash
+npm run check
 ```
 
 ## Despliegue Apps Script

@@ -14,6 +14,13 @@
 - Registro de errores operativos y alertas.
 - Pruebas unitarias de dominio y aplicacion.
 
+### Siguiente hito inmediato (proxima iteracion)
+
+1. Alertas operativas por email sobre errores criticos (`SystemLogs` + trigger de alerta).
+2. Catalogos de configuracion (`Config`) para eventos y paquetes permitidos.
+3. Pruebas unitarias para `RegisterOrderUseCase` y `DailySequenceOrderIdGenerator`.
+4. Contrato de API interno para futura migracion web (DTOs y puertos compartidos).
+
 ## Fase 2 - Automatizaciones
 
 - Notificaciones por email internas.
