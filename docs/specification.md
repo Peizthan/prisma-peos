@@ -28,7 +28,7 @@ Construir una base operativa que permita:
 1. Al enviar un formulario, se debe generar un pedido con un ID unico.
 2. El pedido debe almacenarse en una hoja `Orders` con columnas estables.
 3. El ID del pedido debe quedar visible en la hoja de respuestas del formulario.
-4. El sistema debe clasificar paquete en un catalogo inicial (`BASIC`, `PLUS`, `PREMIUM`).
+4. El sistema debe clasificar paquete en un catalogo inicial con los valores reales de Prisma: `INDIVIDUAL`, `FAMILIAR_2`, `MULTIELEMENTO_2`, `FAMILIAR_3`, `MULTIELEMENTO_3`.
 
 ## Requisitos no funcionales
 

@@ -13,7 +13,7 @@ Campos:
 - `athleteFullName` (string)
 - `guardianFullName` (string, opcional)
 - `email` (string)
-- `packageCode` (enum: BASIC | PLUS | PREMIUM)
+- `packageCode` (enum: INDIVIDUAL | FAMILIAR_2 | MULTIELEMENTO_2 | FAMILIAR_3 | MULTIELEMENTO_3)
 - `createdAtIso` (string ISO-8601)
 - `sourceResponseId` (string)
 
@@ -44,7 +44,7 @@ Reglas:
 1. `type` acepta `PACKAGE`, `EVENT` o `ALERT_EMAIL`.
 2. `code` se evalua en mayusculas para matching.
 3. `isActive` controla si la entrada participa en validacion.
-4. Los paquetes activos controlan valores permitidos en `packageCode`.
+4. Los paquetes activos controlan valores permitidos en `packageCode`; el valor persistido debe ser el codigo interno, no la etiqueta de presentacion.
 5. Los eventos activos, si existen, controlan valores permitidos en `eventCode`.
 6. Los registros `ALERT_EMAIL` activos se usan para notificaciones de errores criticos.
 

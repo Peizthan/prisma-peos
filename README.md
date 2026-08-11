@@ -18,6 +18,7 @@ El MVP usa Google Forms, Google Sheets y Google Apps Script, pero su arquitectur
 - Almacenamiento automatico en Google Sheets
 - Generacion de identificadores unicos por pedido
 - Organizacion de pedidos en una hoja dedicada
+- Catalogo de paquetes Prisma con codigos internos y etiquetas de formulario compatibles
 
 Fuera de alcance en esta fase:
 

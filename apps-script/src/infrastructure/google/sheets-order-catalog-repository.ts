@@ -3,8 +3,25 @@ import type { OrderCatalogRepository } from '../../application/ports/order-catal
 import type { OrderPackage } from '../../domain/entities/order';
 
 const CONFIG_HEADERS = ['type', 'code', 'isActive', 'description'] as const;
+const DEFAULT_PACKAGE_DEFINITIONS = [
+  ['PACKAGE', 'INDIVIDUAL', true, 'Individual'],
+  ['PACKAGE', 'FAMILIAR_2', true, 'Familiar x 2'],
+  ['PACKAGE', 'MULTIELEMENTO_2', true, 'Multielemento x 2'],
+  ['PACKAGE', 'FAMILIAR_3', true, 'Familiar x 3'],
+  ['PACKAGE', 'MULTIELEMENTO_3', true, 'Multielemento x 3']
+] as const;
+const DEFAULT_SERVICE_TYPE_DEFINITIONS = [
+  ['SERVICE_TYPE', 'PRESENTATION', true, 'Fotos de la presentación'],
+  ['SERVICE_TYPE', 'PRESENTATION_AND_PORTRAITS', true, 'Fotos de la presentación + retratos']
+] as const;
+const DEFAULT_DELIVERY_DEFINITIONS = [
+  ['DELIVERY', 'IMMEDIATE', true, 'Entrega Inmediata'],
+  ['DELIVERY', 'PRIORITY', true, 'Entrega Prioritaria'],
+  ['DELIVERY', 'STANDARD', true, 'Entrega Estándar']
+] as const;
+const DEFAULT_CONFIG_ROWS = [...DEFAULT_PACKAGE_DEFINITIONS, ...DEFAULT_SERVICE_TYPE_DEFINITIONS, ...DEFAULT_DELIVERY_DEFINITIONS] as const;
 
-type ConfigType = 'PACKAGE' | 'EVENT';
+type ConfigType = 'PACKAGE' | 'EVENT' | 'SERVICE_TYPE' | 'DELIVERY';
 
 interface CatalogEntry {
   type: ConfigType;
@@ -34,6 +51,25 @@ export class SheetsOrderCatalogRepository implements OrderCatalogRepository {
     return activePackages.some((entry) => entry.code === packageCode);
   }
 
+  isAllowedServiceType(serviceTypeCode: string): boolean {
+    const activeServiceTypes = this.loadActiveEntriesByType('SERVICE_TYPE');
+    return activeServiceTypes.some((entry) => entry.code === serviceTypeCode);
+  }
+
+  isAllowedDeliveryCode(deliveryCode: string): boolean {
+    const activeDeliveries = this.loadActiveEntriesByType('DELIVERY');
+    return activeDeliveries.some((entry) => entry.code === deliveryCode);
+  }
+
+  resolveActiveEventCode(): string {
+    const activeEvents = this.loadActiveEntriesByType('EVENT');
+    const firstEvent = activeEvents[0];
+    if (!firstEvent) {
+      return 'UNSPECIFIED';
+    }
+    return firstEvent.code;
+  }
+
   private loadActiveEntriesByType(type: ConfigType): CatalogEntry[] {
     const sheet = this.ensureSheet();
     const lastRow = sheet.getLastRow();
@@ -50,6 +86,27 @@ export class SheetsOrderCatalogRepository implements OrderCatalogRepository {
       .filter((entry) => entry.type === type && entry.isActive);
   }
 
+  private ensureDefaultPackageRows(sheet: GoogleAppsScript.Spreadsheet.Sheet): void {
+    const existingRows = sheet.getRange(2, 1, Math.max(sheet.getLastRow() - 1, 0), CONFIG_HEADERS.length).getValues();
+    const existingCodes = new Set<string>();
+
+    existingRows.forEach((row) => {
+      const entry = this.toEntry(row);
+      if (!entry) {
+        return;
+      }
+      existingCodes.add(`${entry.type}:${entry.code}`);
+    });
+
+    const missingRows = DEFAULT_CONFIG_ROWS.filter(([type, code]) => !existingCodes.has(`${type}:${code}`));
+    if (missingRows.length === 0) {
+      return;
+    }
+
+    const rowsToAppend = missingRows.map((row) => [...row]);
+    sheet.getRange(sheet.getLastRow() + 1, 1, rowsToAppend.length, CONFIG_HEADERS.length).setValues(rowsToAppend);
+  }
+
   private toEntry(row: unknown[]): CatalogEntry | undefined {
     const rawType = row[0];
     const rawCode = row[1];
@@ -60,7 +117,7 @@ export class SheetsOrderCatalogRepository implements OrderCatalogRepository {
     }
 
     const normalizedType = rawType.trim().toUpperCase();
-    if (normalizedType !== 'PACKAGE' && normalizedType !== 'EVENT') {
+    if (normalizedType !== 'PACKAGE' && normalizedType !== 'EVENT' && normalizedType !== 'SERVICE_TYPE' && normalizedType !== 'DELIVERY') {
       return undefined;
     }
 
@@ -97,6 +154,7 @@ export class SheetsOrderCatalogRepository implements OrderCatalogRepository {
     const existing = this.spreadsheet.getSheetByName(this.sheetName);
     if (existing) {
       this.ensureHeaders(existing);
+      this.ensureDefaultPackageRows(existing);
       return existing;
     }
 
@@ -134,10 +192,8 @@ export class SheetsOrderCatalogRepository implements OrderCatalogRepository {
   }
 
   private seedDefaults(sheet: GoogleAppsScript.Spreadsheet.Sheet): void {
-    sheet.getRange(2, 1, 3, CONFIG_HEADERS.length).setValues([
-      ['PACKAGE', 'BASIC', true, 'Default package'],
-      ['PACKAGE', 'PLUS', true, 'Default package'],
-      ['PACKAGE', 'PREMIUM', true, 'Default package']
-    ]);
+    sheet.getRange(2, 1, DEFAULT_CONFIG_ROWS.length, CONFIG_HEADERS.length).setValues(
+      DEFAULT_CONFIG_ROWS.map((row) => [...row])
+    );
   }
 }

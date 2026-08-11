@@ -9,6 +9,7 @@
 - Se valida el esquema de cabeceras de `Orders` antes de persistir.
 - Se registran eventos tecnicos en `SystemLogs` con formato estructurado.
 - Se valida contra catalogos activos en hoja `Config`.
+- Los paquetes del formulario se mapearan desde etiquetas de presentacion como `Individual` o `Familiar x 2 personas` hacia codigos internos como `INDIVIDUAL` o `FAMILIAR_2`.
 - En errores criticos se envia alerta por email a destinatarios operativos.
 
 ## Automatizaciones siguientes recomendadas
