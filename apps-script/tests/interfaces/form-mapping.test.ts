@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { PeosError } from '../../src/application/errors/peos-error';
-import { parseDelivery, parsePackage, parsePixiesetSelection, parseServiceType } from '../../src/interfaces/triggers/form-mapping';
+import {
+  mapFormSubmissionToRegisterOrderInput,
+  parseDelivery,
+  parsePackage,
+  parsePixiesetSelection,
+  parseServiceType
+} from '../../src/interfaces/triggers/form-mapping';
 
 describe('parsePackage', () => {
   it.each([
@@ -56,5 +62,33 @@ describe('parsePixiesetSelection', () => {
   it('rejects invalid Pixieset values', () => {
     expect(() => parsePixiesetSelection('Quizás')).toThrowError(PeosError);
     expect(() => parsePixiesetSelection('')).toThrowError(PeosError);
+  });
+});
+
+describe('mapFormSubmissionToRegisterOrderInput', () => {
+  it('accepts the exact live-form field names from the production CSV', () => {
+    const event = {
+      namedValues: {
+        '1. Nombre del atleta': ['Ariadna Test'],
+        '2. Nombre del responsable': ['María Test'],
+        '3. Teléfono / WhatsApp': ['+52 55 1111 3333'],
+        '4. Correo electrónico': ['prueba3@correo.com'],
+        '5. ¿Qué tipo de servicio querés?': ['Fotos de la presentación'],
+        '6. El paquete es:': ['Individual'],
+        '7. ¿En que tiempo le gustaría la entrega?': ['Entrega Inmediata'],
+        '8. ¿Te gustaría elegir tus fotos con Pixieset?': ['Si']
+      }
+    } as unknown as GoogleAppsScript.Events.SheetsOnFormSubmit;
+
+    expect(mapFormSubmissionToRegisterOrderInput(event)).toMatchObject({
+      athleteFullName: 'Ariadna Test',
+      guardianFullName: 'María Test',
+      phoneWhatsapp: '+52 55 1111 3333',
+      email: 'prueba3@correo.com',
+      serviceTypeCode: 'PRESENTATION',
+      packageCode: 'INDIVIDUAL',
+      deliveryCode: 'IMMEDIATE',
+      pixiesetSelection: 'YES'
+    });
   });
 });

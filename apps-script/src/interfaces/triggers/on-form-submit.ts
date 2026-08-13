@@ -7,12 +7,32 @@ import { SheetsOrderRepository } from '../../infrastructure/google/sheets-order-
 import { SheetsSystemLogger } from '../../infrastructure/google/sheets-system-logger';
 import { mapFormSubmissionToRegisterOrderInput } from './form-mapping';
 
+export function getSpreadsheetFromFormSubmitEvent(
+  e: GoogleAppsScript.Events.SheetsOnFormSubmit
+): GoogleAppsScript.Spreadsheet.Spreadsheet {
+  const responseSheet = e.range?.getSheet?.();
+  const parentSpreadsheet = responseSheet?.getParent?.();
+
+  if (parentSpreadsheet) {
+    return parentSpreadsheet;
+  }
+
+  const activeSpreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  if (activeSpreadsheet) {
+    return activeSpreadsheet;
+  }
+
+  throw new Error('Form submit event has no parent spreadsheet and no active spreadsheet');
+}
+
 export function onFormSubmitHandler(e: GoogleAppsScript.Events.SheetsOnFormSubmit): void {
-  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const spreadsheet = getSpreadsheetFromFormSubmitEvent(e);
   const logger = new SheetsSystemLogger(spreadsheet);
   const alertService = new CriticalErrorEmailAlert(spreadsheet);
   const lockRunner = new DocumentLockRunner();
   const correlationId = buildCorrelationId(e);
+  const responseSheet = e.range?.getSheet?.();
+  const responseRow = e.range?.getRow();
 
   try {
     lockRunner.runWithLock('onFormSubmitHandler', () => {
@@ -22,7 +42,9 @@ export function onFormSubmitHandler(e: GoogleAppsScript.Events.SheetsOnFormSubmi
       const useCase = new RegisterOrderUseCase(repository, catalogRepository);
 
       const order = useCase.execute(input);
-      writeOrderIdOnResponseSheet(e.range.getSheet(), e.range.getRow(), order.orderId);
+      if (responseSheet && typeof responseRow === 'number') {
+        writeOrderIdOnResponseSheet(responseSheet, responseRow, order.orderId);
+      }
 
       logger.info({
         code: 'ORDER_REGISTERED',
@@ -43,8 +65,8 @@ export function onFormSubmitHandler(e: GoogleAppsScript.Events.SheetsOnFormSubmi
       retryable: false,
       context: {
         correlationId,
-        responseSheet: e.range.getSheet().getName(),
-        responseRow: e.range.getRow()
+        responseSheet: responseSheet?.getName() ?? 'UNKNOWN',
+        responseRow: responseRow ?? 'UNKNOWN'
       }
     });
 
@@ -82,7 +104,7 @@ export function onFormSubmitHandler(e: GoogleAppsScript.Events.SheetsOnFormSubmi
 }
 
 function buildCorrelationId(e: GoogleAppsScript.Events.SheetsOnFormSubmit): string {
-  const row = e.range.getRow();
+  const row = e.range?.getRow?.() ?? 0;
   const timestamp = Date.now();
   return `TRG-${row}-${timestamp}`;
 }

@@ -5,8 +5,8 @@
   "description": "PEOS MVP with Clean Architecture over Google Workspace",
   "scripts": {
     "clean": "rimraf apps-script/dist",
-    "build:apps-script": "npm run clean && esbuild apps-script/src/main.ts --bundle --platform=browser --format=iife --target=es2019 --outfile=apps-script/dist/code.js && shx cp apps-script/appsscript.json apps-script/dist/appsscript.json",
-    "dev:apps-script": "npm run clean && shx mkdir -p apps-script/dist && shx cp apps-script/appsscript.json apps-script/dist/appsscript.json && esbuild apps-script/src/main.ts --bundle --platform=browser --format=iife --target=es2019 --outfile=apps-script/dist/code.js --watch",
+    "build:apps-script": "npm run clean && esbuild apps-script/src/main.ts --bundle --platform=browser --format=iife --target=es2019 --outfile=apps-script/dist/code.js --footer:js=\"var __peos_onFormSubmit = globalThis.onFormSubmit; function onFormSubmit(e){ return __peos_onFormSubmit(e); }\" && shx cp apps-script/appsscript.json apps-script/dist/appsscript.json",
+    "dev:apps-script": "npm run clean && shx mkdir -p apps-script/dist && shx cp apps-script/appsscript.json apps-script/dist/appsscript.json && esbuild apps-script/src/main.ts --bundle --platform=browser --format=iife --target=es2019 --outfile=apps-script/dist/code.js --footer:js=\"var __peos_onFormSubmit = globalThis.onFormSubmit; function onFormSubmit(e){ return __peos_onFormSubmit(e); }\" --watch",
     "dev:web": "npm --prefix web run dev",
     "build:web": "npm --prefix web run build",
     "typecheck:web": "npm --prefix web run typecheck",

@@ -11,16 +11,28 @@ import {
 } from '../../domain/entities/order';
 
 const FORM_FIELDS = {
-  athleteFullName: 'Nombre del atleta',
-  guardianFullName: 'Nombre del responsable',
-  phoneWhatsapp: 'Teléfono / WhatsApp',
-  email: 'Correo electrónico',
-  serviceType: '¿Qué tipo de servicio querés?',
-  packageLabel: 'El paquete es:',
-  delivery: '¿En qué tiempo te gustaría la entrega?',
-  pixiesetSelection: '¿Te gustaría elegir tus fotos con Pixieset?',
-  academyGroupClub: 'Academia / grupo / club',
-  observations: 'Observaciones'
+  athleteFullName: ['1. Nombre del atleta', 'Nombre del atleta', 'Nombre del alumno', 'Nombre del deportista'],
+  guardianFullName: ['2. Nombre del responsable', 'Nombre del responsable', 'Nombre del tutor', 'Nombre del apoderado'],
+  phoneWhatsapp: ['3. Teléfono / WhatsApp', 'Teléfono / WhatsApp', 'WhatsApp', 'Teléfono'],
+  email: ['4. Correo electrónico', 'Correo electrónico', 'Dirección de correo electrónico', 'Email'],
+  serviceType: ['5. ¿Qué tipo de servicio querés?', '¿Qué tipo de servicio querés?', 'Tipo de servicio'],
+  packageLabel: ['6. El paquete es:', 'El paquete es:', 'Paquete'],
+  delivery: [
+    '7. ¿En que tiempo le gustaría la entrega?',
+    '7. ¿En qué tiempo le gustaría la entrega?',
+    '¿En que tiempo le gustaría la entrega?',
+    '¿En qué tiempo le gustaría la entrega?',
+    '¿En que tiempo te gustaría la entrega?',
+    '¿En qué tiempo te gustaría la entrega?',
+    'Tiempo de entrega'
+  ],
+  pixiesetSelection: [
+    '8. ¿Te gustaría elegir tus fotos con Pixieset?',
+    '¿Te gustaría elegir tus fotos con Pixieset?',
+    'Pixieset'
+  ],
+  academyGroupClub: ['9. Academia / grupo / club ', '9. Academia / grupo / club', 'Academia / grupo / club', 'Academia', 'Grupo / club'],
+  observations: ['10. Observaciones', 'Observaciones', 'Comentarios']
 } as const;
 
 const PACKAGE_CODE_BY_DISPLAY_LABEL = new Map<string, OrderPackage>(
@@ -47,16 +59,16 @@ export function mapFormSubmissionToRegisterOrderInput(
 ): RegisterOrderInput {
   const namedValues = e.namedValues;
 
-  const athleteFullName = requiredField(namedValues, FORM_FIELDS.athleteFullName);
-  const guardianFullName = requiredField(namedValues, FORM_FIELDS.guardianFullName);
-  const phoneWhatsapp = requiredField(namedValues, FORM_FIELDS.phoneWhatsapp);
-  const email = requiredField(namedValues, FORM_FIELDS.email);
-  const serviceTypeLabel = requiredField(namedValues, FORM_FIELDS.serviceType);
-  const packageLabel = requiredField(namedValues, FORM_FIELDS.packageLabel);
-  const deliveryLabel = requiredField(namedValues, FORM_FIELDS.delivery);
-  const pixiesetSelection = requiredField(namedValues, FORM_FIELDS.pixiesetSelection);
-  const academyGroupClub = optionalField(namedValues, FORM_FIELDS.academyGroupClub);
-  const observations = optionalField(namedValues, FORM_FIELDS.observations);
+  const athleteFullName = requiredField(namedValues, ...FORM_FIELDS.athleteFullName);
+  const guardianFullName = requiredField(namedValues, ...FORM_FIELDS.guardianFullName);
+  const phoneWhatsapp = requiredField(namedValues, ...FORM_FIELDS.phoneWhatsapp);
+  const email = requiredField(namedValues, ...FORM_FIELDS.email);
+  const serviceTypeLabel = requiredField(namedValues, ...FORM_FIELDS.serviceType);
+  const packageLabel = requiredField(namedValues, ...FORM_FIELDS.packageLabel);
+  const deliveryLabel = requiredField(namedValues, ...FORM_FIELDS.delivery);
+  const pixiesetSelection = requiredField(namedValues, ...FORM_FIELDS.pixiesetSelection);
+  const academyGroupClub = optionalField(namedValues, ...FORM_FIELDS.academyGroupClub);
+  const observations = optionalField(namedValues, ...FORM_FIELDS.observations);
 
   return {
     athleteFullName: athleteFullName.trim(),
@@ -73,27 +85,75 @@ export function mapFormSubmissionToRegisterOrderInput(
   };
 }
 
-function requiredField(namedValues: GoogleAppsScript.Events.SheetsOnFormSubmit['namedValues'], key: string): string {
-  const values = namedValues[key];
-  const firstValue = values?.[0];
+function requiredField(
+  namedValues: GoogleAppsScript.Events.SheetsOnFormSubmit['namedValues'],
+  ...searchTokens: string[]
+): string {
+  const firstAvailable = resolveFieldValue(namedValues, searchTokens);
 
-  if (!firstValue || firstValue.trim().length === 0) {
-    throw new PeosError(`Missing required form field: ${key}`, {
+  if (!firstAvailable || firstAvailable.trim().length === 0) {
+    const missingKey = searchTokens[0] ?? 'unknown';
+    throw new PeosError(`Missing required form field: ${missingKey}`, {
       code: 'VALIDATION_ERROR',
       operation: 'mapFormSubmissionToRegisterOrderInput',
       retryable: false,
-      context: { field: key }
+      context: { field: missingKey, searchTokens }
     });
   }
 
-  return firstValue;
+  return firstAvailable;
 }
 
 function optionalField(
   namedValues: GoogleAppsScript.Events.SheetsOnFormSubmit['namedValues'],
-  key: string
+  ...searchTokens: string[]
 ): string | undefined {
-  return namedValues[key]?.[0];
+  return resolveFieldValue(namedValues, searchTokens, true);
+}
+
+function resolveFieldValue(
+  namedValues: GoogleAppsScript.Events.SheetsOnFormSubmit['namedValues'],
+  searchTokens: string[],
+  allowEmpty = false
+): string | undefined {
+  for (const [key, values] of Object.entries(namedValues ?? {})) {
+    const value = values?.[0];
+    if (typeof value !== 'string') {
+      continue;
+    }
+
+    if (!allowEmpty && value.trim().length === 0) {
+      continue;
+    }
+
+    if (matchesSearchTokens(key, searchTokens)) {
+      return value;
+    }
+  }
+
+  return undefined;
+}
+
+function matchesSearchTokens(key: string, searchTokens: string[]): boolean {
+  const normalizedKey = normalizeFieldName(key);
+  if (!normalizedKey) {
+    return false;
+  }
+
+  return searchTokens.some((token) => {
+    const normalizedToken = normalizeFieldName(token);
+    return normalizedToken.length > 0 && normalizedKey.includes(normalizedToken);
+  });
+}
+
+function normalizeFieldName(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 export function parsePackage(label: string): OrderPackage {
@@ -193,6 +253,10 @@ export function parsePixiesetSelection(label: string): PixiesetSelection {
 }
 
 function buildResponseId(e: GoogleAppsScript.Events.SheetsOnFormSubmit): string {
-  const row = e.range.getRow();
+  const row = e.range?.getRow?.() ?? 0;
+  if (row <= 0) {
+    return `FORM-${Date.now()}`;
+  }
+
   return `FORM-ROW-${row}`;
 }
