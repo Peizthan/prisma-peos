@@ -97,7 +97,8 @@ export default function OrderForm() {
       } else {
         const res = await fetch(endpoint, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          // text/plain avoids the preflight OPTIONS request that Apps Script cannot handle
+          headers: { 'Content-Type': 'text/plain' },
           body: JSON.stringify(form),
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);

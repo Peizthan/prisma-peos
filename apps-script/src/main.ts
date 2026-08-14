@@ -45,8 +45,15 @@ Object.assign(globalThis as unknown as Record<string, unknown>, {
   onFormSubmit,
   installOnFormSubmitTrigger,
   deleteOnFormSubmitTriggers,
-  doPost
+  doPost,
+  doGet
 });
+
+function doGet(): GoogleAppsScript.Content.TextOutput {
+  return ContentService.createTextOutput(
+    JSON.stringify({ status: 'ok', service: 'PEOS API', version: '1.0' })
+  ).setMimeType(ContentService.MimeType.JSON);
+}
 
 function doPost(e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.TextOutput {
   const json = (result: object) =>

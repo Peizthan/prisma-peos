@@ -4,3 +4,5 @@ apps-script/dist/
 .DS_Store
 coverage/
 *.log
+.env.local
+.env.*.local
