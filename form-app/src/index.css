@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Poppins', sans-serif;
+  }
+
+  body {
+    background-color: #242424;
+    /* subtle grain texture matching the brand document */
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    min-height: 100dvh;
+    color: #ffffff;
+  }
+}
+
+@layer components {
+  .field-input {
+    @apply w-full rounded-lg border border-brand-border bg-brand-surface px-4 py-3
+           text-sm text-white placeholder-brand-muted
+           focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent
+           transition-colors duration-150;
+  }
+
+  .field-input.error {
+    @apply border-red-500 focus:border-red-500 focus:ring-red-500;
+  }
+
+  .radio-card {
+    @apply flex cursor-pointer items-center gap-3 rounded-lg border border-brand-border
+           bg-brand-surface px-4 py-3 text-sm font-medium text-brand-muted
+           transition-all duration-150 hover:border-brand-accent hover:text-white;
+  }
+
+  .radio-card.selected {
+    @apply border-brand-accent bg-brand-surface text-white;
+  }
+
+  .radio-card.error {
+    @apply border-red-500;
+  }
+}
