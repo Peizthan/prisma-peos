@@ -26,7 +26,25 @@ export default function App() {
         <footer className="mt-12 flex flex-col items-center gap-2 border-t border-brand-border pt-8 text-xs text-brand-muted">
           <div className="h-px w-16 bg-brand-accent" />
           <p>© {new Date().getFullYear()} Prisma Fotografía Social</p>
-          <p>Instagram: <span className="text-brand-accent">social.prisma</span></p>
+          <div className="flex gap-4">
+            <a
+              href="https://wa.me/595981818121"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-brand-accent transition-colors"
+            >
+              WhatsApp: 0981818121
+            </a>
+            <span className="text-brand-border">·</span>
+            <a
+              href="https://www.instagram.com/social.prisma"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-brand-accent hover:text-white transition-colors"
+            >
+              @social.prisma
+            </a>
+          </div>
         </footer>
       </div>
     </div>
